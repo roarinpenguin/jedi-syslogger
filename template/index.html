@@ -647,6 +647,13 @@
         }
 
         async function startSending() {
+            // Check if custom log type is selected but no template loaded
+            const logType = document.getElementById('log-type').value;
+            if (logType === 'custom' && !selectedTemplate) {
+                alert('Please select a custom template first!\n\nClick on a template in the "Custom Templates" section.');
+                return;
+            }
+            
             document.getElementById('logs-container').innerHTML = '';
             
             const response = await fetch('/api/start', {
@@ -750,10 +757,21 @@
                 div.className = 'template-item';
                 div.textContent = template;
                 div.onclick = async () => {
+                    // Remove previous selection
+                    document.querySelectorAll('.template-item').forEach(el => el.style.background = '');
+                    
                     const resp = await fetch('/api/template/' + template);
                     const content = await resp.json();
                     selectedTemplate = content.content;
-                    alert('Template loaded: ' + template);
+                    
+                    // Highlight selected template
+                    div.style.background = 'rgba(147, 112, 219, 0.3)';
+                    
+                    // Automatically set log type to custom
+                    document.getElementById('log-type').value = 'custom';
+                    await saveConfig();
+                    
+                    alert('Template loaded: ' + template + '\n\nLog type automatically set to "Custom Template"');
                 };
                 list.appendChild(div);
             });

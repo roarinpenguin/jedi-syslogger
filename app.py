@@ -180,14 +180,25 @@ class LogGenerator:
     @staticmethod
     def custom_template(template_content):
         import re
-        result = template_content
+        # Split template into lines and pick a random one
+        lines = [line.strip() for line in template_content.strip().split('\n') if line.strip()]
+        if not lines:
+            return "No template content available"
+        
+        result = random.choice(lines)
+        
+        # Replace IPs with random IPs
         result = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', lambda m: random_ip(), result)
-        result = re.sub(r'\buser\d+\b', random_user(), result, flags=re.IGNORECASE)
-        result = re.sub(r'\b[a-z]+\.[a-z]+\b', lambda m: random_user(), result)
-        result = re.sub(r'\bhost\d+\b', random_host(), result, flags=re.IGNORECASE)
-        result = re.sub(r'\b[a-z]+-server\b', lambda m: random_host(), result)
-        result = re.sub(r'\d{4}-\d{2}-\d{2}', datetime.now().strftime("%Y-%m-%d"), result)
-        result = re.sub(r'\d{2}:\d{2}:\d{2}', datetime.now().strftime("%H:%M:%S"), result)
+        
+        # Update timestamps to current time
+        result = re.sub(r'\bdate=\d{4}-\d{2}-\d{2}\b', f'date={datetime.now().strftime("%Y-%m-%d")}', result)
+        result = re.sub(r'\btime=\d{2}:\d{2}:\d{2}\b', f'time={datetime.now().strftime("%H:%M:%S")}', result)
+        result = re.sub(r'\beventtime=\d+\b', f'eventtime={int(time.time() * 1000000000)}', result)
+        
+        # Update timestamps in other formats
+        result = re.sub(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), result)
+        result = re.sub(r'\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}', datetime.now().strftime("%Y/%m/%d %H:%M:%S"), result)
+        
         return result
 
 def get_log_generator(log_type, custom_template=None):
@@ -208,14 +219,27 @@ def get_log_generator(log_type, custom_template=None):
 
 def send_syslog(message, server, port, protocol):
     try:
+        # RFC 5424 format: <priority>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID STRUCTURED-DATA MSG
+        priority = 134  # local0.info (16*8 + 6)
+        version = 1
+        timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        hostname = "jedi-syslogger"
+        app_name = "jedi-syslogger"
+        procid = "-"
+        msgid = "-"
+        structured_data = "-"
+        
+        # Format according to RFC 5424
+        rfc5424_message = f"<{priority}>{version} {timestamp} {hostname} {app_name} {procid} {msgid} {structured_data} {message}"
+        
         if protocol == 'tcp':
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((server, int(port)))
-            sock.send(message.encode('utf-8') + b'\n')
+            sock.send(rfc5424_message.encode('utf-8') + b'\n')
             sock.close()
         else:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.sendto(message.encode('utf-8'), (server, int(port)))
+            sock.sendto(rfc5424_message.encode('utf-8'), (server, int(port)))
             sock.close()
         return True
     except Exception as e:
