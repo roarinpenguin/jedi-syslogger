@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jedi Syslogger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
+            font-weight: 300;
+            background: linear-gradient(135deg, #1a0033 0%, #2d1b47 50%, #4a2d6b 100%);
+            color: #e0d5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5a3d7c 0%, #7b5ba3 100%);
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(138, 43, 226, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            color: #d4a5ff;
+            font-family: monospace;
+            font-size: 4px;
+            line-height: 0.9;
+            white-space: pre;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #e0c3ff 0%, #ffa6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(224, 195, 255, 0.3);
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            padding: 12px 30px;
+            border: none;
+            background: linear-gradient(135deg, #5a3d7c 0%, #6b4a8d 100%);
+            color: #e0d5f5;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-button:hover {
+            background: linear-gradient(135deg, #6b4a8d 0%, #7b5ba3 100%);
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #7b5ba3 0%, #9370DB 100%);
+            box-shadow: 0 4px 15px rgba(147, 112, 219, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(90, 61, 124, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.3);
+            border: 1px solid rgba(224, 195, 255, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #d4a5ff;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(212, 165, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(29, 11, 51, 0.6);
+            color: #e0d5f5;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #9370DB;
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.4);
+        }
+
+        .button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #7b5ba3 0%, #9370DB 100%);
+            color: white;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(147, 112, 219, 0.5);
+        }
+
+        .button-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .button-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .button-danger {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            color: white;
+        }
+
+        .button-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(29, 11, 51, 0.6);
+            border: 2px solid rgba(212, 165, 255, 0.3);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active {
+            background: #4CAF50;
+        }
+
+        .status-inactive {
+            background: #999;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 10px currentColor;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .file-upload {
+            border: 2px dashed rgba(212, 165, 255, 0.3);
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #9370DB;
+            background: rgba(147, 112, 219, 0.1);
+        }
+
+        .templates-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(29, 11, 51, 0.6);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-item:hover {
+            background: rgba(147, 112, 219, 0.3);
+        }
+
+        .footer {
+            background: rgba(29, 11, 51, 0.8);
+            padding: 20px;
+            text-align: center;
+            color: #d4a5ff;
+            font-size: 14px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .config-manager {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .config-manager > div {
+            flex: 1;
+        }
+
+        .logs-container {
+            margin-top: 30px;
+            background: rgba(29, 11, 51, 0.6);
+            border: 2px solid rgba(212, 165, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(90, 61, 124, 0.2);
+            border-radius: 3px;
+            word-wrap: break-word;
+        }
+
+        .log-entry.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #ff6b6b;
+        }
+
+        .log-timestamp {
+            color: #9370DB;
+            margin-right: 10px;
+        }
+
+        .button-small {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <pre class="logo">                                                                                                    
+                                     .-+##################*=:                                       
+                                :+#########**++=====++*##########*.                                 
+                            :*######+-.                     .-+######*:                             
+                         -#####*-                                 -*#####=                          
+                      .#####+.                                        =#####=                       
+                    =####+                                               =####*                     
+                  =####-                                                   .*###*                   
+                -###*.        .                                     .         +###*                 
+               ####:        +:                                       --         +###+               
+             +###=        =#-                                         =#.         *###.             
+            ####.        ##*                                          .##*         -###*            
+           ###*         ###+                    .:                     *###         .####           
+         .###+         ####=                    -=                     *####          *##*          
+         ###+         *####+                    =#                     *####*          ###*         
+        *##+         =#####*                    +#                     ######-          *##*        
+       +##*          *######:                   +#                    :######+           ###=       
+      :###      .   -#######+                   +#                    *#######:           ###:      
+      ###:      =   =########-                  +#                   =########=   +       :###      
+     -##*      #:   *#########.                 +#                  -#########=   -=       *##-     
+     ###:     .#    *##########.                +#                 =##########+   .#       .###     
+    .###      ##    *###########=               +#                ############+   .#:       ###:    
+    =##+      ##.   *#############              +#              :#############=   :#+       =##+    
+    *##-      ##-   =##############*            +#             ###############=   =##       .###    
+    ###.      ##*   -#############:             +#              *#############:   ###        ###    
+    ###       ###-   *###########.              +#               +###########+   +###        ###    
+    ###       ####.  -##########-               +#.               *##########   -###*        ###    
+    ###.      #####   =########*                +#-                #########=  :####:        ###    
+    *##-      .#####.  *#######.                +#+                +#######+  =#####        .###    
+    -##+       ######*  *######                 +#*                 ######:  ######=        =##+    
+     ###        #######= =####*             :   +##   -             #####  *#######         *##:    
+     ###-     : -########*####*              +  *##  *.             ####*#########. :      .###     
+     :###     .  +#############              :* *## #-              #############: .       *##=     
+      *##-     +  =############.              =#####=              +############- ..      :###      
+      .###      *: -###########*      -===++++######*++++===:      ############- --       ###-      
+       =###      *+ -###########:             =#####=             +##########*. *-       *##+       
+        +###      =#*############            :* *## #:           -###########**#-       *##*        
+         *###      :##############          .   *##   .         :#############*.       *###.        
+          *###       +#############             *##            -#############+        +###.         
+           *###:       *############=           *##           *############*         *###           
+            +###=        *############          *##         :############-         :####            
+              ###*.        .###########+        *##        *##########*           +###-             
+               =###*          :*#########*.     *##     -*#########+            =###*               
+                 +###+            -#########+.  *##  :+#########.             =####.                
+                   +###*.              -###########*######*:                +####:                  
+                     +####+                     ...                      -####*.                    
+                       :#####+.                                       -*####+                       
+                          :######+.                               -*#####+                          
+                             .+#######+-.                   :=*######*-                             
+                                  -*############****#############+.                                 
+                                        :-+##############*=:.                                       
+</pre>
+        <h1>Jedi Syslogger</h1>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('config', event)">Configuration</button>
+            <button class="tab-button" onclick="switchTab('usage', event)">Usage</button>
+        </div>
+
+        <div id="config-tab" class="tab-content active">
+            <h2 style="margin-bottom: 25px; color: #ffa6ff;">Configuration</h2>
+            
+            <div class="config-manager">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Saved Configurations</label>
+                    <select id="saved-configs" onchange="loadSavedConfig()">
+                        <option value="">-- Select a saved config --</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="button button-primary button-small" onclick="saveAsNewConfig()">Save Cfg with a Name</button>
+                    <button class="button button-danger button-small" onclick="deleteCurrentConfig()">Delete</button>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="form-group">
+                    <label>Syslog Server</label>
+                    <input type="text" id="syslog-server" placeholder="192.168.1.100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Syslog Port</label>
+                    <input type="number" id="syslog-port" value="514">
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="form-group">
+                    <label>Protocol</label>
+                    <select id="protocol">
+                        <option value="udp">UDP</option>
+                        <option value="tcp">TCP</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Log Type</label>
+                    <select id="log-type">
+                        <option value="fortigate">Fortigate Firewall</option>
+                        <option value="paloalto">Palo Alto Firewall</option>
+                        <option value="sentinelone">SentinelOne</option>
+                        <option value="proofpoint">Proofpoint</option>
+                        <option value="netskope">Netskope</option>
+                        <option value="office365">Office 365</option>
+                        <option value="okta">Okta</option>
+                        <option value="custom">Custom Template</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="form-group">
+                    <label>Logs per Session</label>
+                    <input type="number" id="log-count" value="10" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>Delay (milliseconds)</label>
+                    <input type="number" id="delay-ms" value="1000" min="100">
+                </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="continuous">
+                <label for="continuous" style="margin-bottom: 0;">Continuous Mode (until stopped)</label>
+            </div>
+
+            <div class="form-group">
+                <label>Custom Template Upload</label>
+                <div class="file-upload" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" accept=".txt" style="display: none;" onchange="uploadTemplate()">
+                    <p>Click to upload a .txt template file</p>
+                </div>
+                <div id="templates-list" class="templates-list"></div>
+            </div>
+
+            <div class="controls">
+                <button class="button button-primary" onclick="saveConfig()">Save Configuration</button>
+            </div>
+        </div>
+
+        <div id="usage-tab" class="tab-content">
+            <h2 style="margin-bottom: 25px; color: #ffa6ff;">Send Syslog Messages</h2>
+            
+            <div class="status">
+                <span class="status-indicator status-inactive" id="status-indicator"></span>
+                <span id="status-text">Ready to send logs</span>
+            </div>
+
+            <div class="controls">
+                <button class="button button-success" id="start-btn" onclick="startSending()">Start Sending</button>
+                <button class="button button-danger" id="stop-btn" onclick="stopSending()" disabled>Stop Sending</button>
+            </div>
+
+            <div class="form-group" style="margin-top: 30px;">
+                <label>Current Configuration:</label>
+                <textarea id="current-config" rows="8" readonly style="font-family: monospace; font-size: 12px;"></textarea>
+            </div>
+
+            <div>
+                <label>Live Log Output:</label>
+                <div id="logs-container" class="logs-container">
+                    <div style="color: #999; text-align: center;">Logs will appear here when sending starts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Crafted with ♡ by the RoarinPenguin
+    </div>
+
+    <script>
+        let selectedTemplate = null;
+        let eventSource = null;
+        let currentConfigName = null;
+
+        function switchTab(tab, event) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            if (tab === 'usage') {
+                loadCurrentConfig();
+                updateStatus();
+                loadRecentLogs();
+            }
+        }
+
+        async function loadConfig() {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            
+            document.getElementById('syslog-server').value = config.syslog_server || '';
+            document.getElementById('syslog-port').value = config.syslog_port || 514;
+            document.getElementById('protocol').value = config.protocol || 'udp';
+            document.getElementById('log-type').value = config.log_type || 'fortigate';
+            document.getElementById('log-count').value = config.log_count || 10;
+            document.getElementById('delay-ms').value = config.delay_ms || 1000;
+            document.getElementById('continuous').checked = config.continuous || false;
+            
+            await loadTemplates();
+            await loadSavedConfigsList();
+        }
+
+        async function loadSavedConfigsList() {
+            const response = await fetch('/api/configs');
+            const configs = await response.json();
+            const select = document.getElementById('saved-configs');
+            
+            select.innerHTML = '<option value="">-- Select a saved config --</option>';
+            Object.keys(configs).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadSavedConfig() {
+            const name = document.getElementById('saved-configs').value;
+            if (!name) return;
+            
+            currentConfigName = name;
+            const response = await fetch('/api/configs/' + name);
+            const config = await response.json();
+            
+            document.getElementById('syslog-server').value = config.syslog_server || '';
+            document.getElementById('syslog-port').value = config.syslog_port || 514;
+            document.getElementById('protocol').value = config.protocol || 'udp';
+            document.getElementById('log-type').value = config.log_type || 'fortigate';
+            document.getElementById('log-count').value = config.log_count || 10;
+            document.getElementById('delay-ms').value = config.delay_ms || 1000;
+            document.getElementById('continuous').checked = config.continuous || false;
+            
+            await saveConfig();
+        }
+
+        async function saveAsNewConfig() {
+            const name = prompt('Enter a name for this configuration:');
+            if (!name) return;
+            
+            const config = {
+                syslog_server: document.getElementById('syslog-server').value,
+                syslog_port: parseInt(document.getElementById('syslog-port').value),
+                protocol: document.getElementById('protocol').value,
+                log_type: document.getElementById('log-type').value,
+                log_count: parseInt(document.getElementById('log-count').value),
+                delay_ms: parseInt(document.getElementById('delay-ms').value),
+                continuous: document.getElementById('continuous').checked
+            };
+            
+            const response = await fetch('/api/configs/' + name, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            });
+            
+            if (response.ok) {
+                currentConfigName = name;
+                await loadSavedConfigsList();
+                document.getElementById('saved-configs').value = name;
+                alert('Configuration saved as: ' + name);
+            }
+        }
+
+        async function deleteCurrentConfig() {
+            const name = document.getElementById('saved-configs').value;
+            if (!name) {
+                alert('Please select a configuration to delete');
+                return;
+            }
+            
+            if (!confirm('Delete configuration "' + name + '"?')) return;
+            
+            const response = await fetch('/api/configs/' + name, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                currentConfigName = null;
+                await loadSavedConfigsList();
+                alert('Configuration deleted');
+            }
+        }
+
+        async function saveConfig() {
+            const config = {
+                syslog_server: document.getElementById('syslog-server').value,
+                syslog_port: parseInt(document.getElementById('syslog-port').value),
+                protocol: document.getElementById('protocol').value,
+                log_type: document.getElementById('log-type').value,
+                log_count: parseInt(document.getElementById('log-count').value),
+                delay_ms: parseInt(document.getElementById('delay-ms').value),
+                continuous: document.getElementById('continuous').checked
+            };
+
+            const response = await fetch('/api/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            });
+
+            if (response.ok) {
+                alert('Configuration saved successfully!');
+            }
+        }
+
+        async function loadCurrentConfig() {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            document.getElementById('current-config').value = JSON.stringify(config, null, 2);
+        }
+
+        async function startSending() {
+            document.getElementById('logs-container').innerHTML = '';
+            
+            const response = await fetch('/api/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({custom_template: selectedTemplate})
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('stop-btn').disabled = false;
+                document.getElementById('status-indicator').classList.remove('status-inactive');
+                document.getElementById('status-indicator').classList.add('status-active');
+                document.getElementById('status-text').textContent = 'Sending logs...';
+                
+                startLogStream();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        }
+
+        async function stopSending() {
+            await fetch('/api/stop', {method: 'POST'});
+            document.getElementById('start-btn').disabled = false;
+            document.getElementById('stop-btn').disabled = true;
+            document.getElementById('status-indicator').classList.remove('status-active');
+            document.getElementById('status-indicator').classList.add('status-inactive');
+            document.getElementById('status-text').textContent = 'Stopped';
+            
+            stopLogStream();
+        }
+
+        function startLogStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            eventSource = new EventSource('/api/logs/stream');
+            
+            eventSource.onmessage = function(event) {
+                if (!event.data || event.data.trim() === '') return;
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.ping) return;
+                    
+                    const logsContainer = document.getElementById('logs-container');
+                    const logDiv = document.createElement('div');
+                    logDiv.className = 'log-entry' + (data.error ? ' error' : '');
+                    
+                    const timestamp = new Date(data.timestamp).toLocaleTimeString();
+                    logDiv.innerHTML = `<span class="log-timestamp">[${timestamp}] #${data.count}</span> ${data.message}`;
+                    
+                    logsContainer.appendChild(logDiv);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                } catch (e) {
+                    // Ignore parse errors (keepalive messages)
+                }
+            };
+            
+            eventSource.onerror = function() {
+                console.log('EventSource error, reconnecting...');
+            };
+        }
+
+        function stopLogStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        async function updateStatus() {
+            const response = await fetch('/api/status');
+            const status = await response.json();
+            
+            if (status.running) {
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('stop-btn').disabled = false;
+                document.getElementById('status-indicator').classList.remove('status-inactive');
+                document.getElementById('status-indicator').classList.add('status-active');
+                document.getElementById('status-text').textContent = 'Sending logs...';
+            } else {
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('stop-btn').disabled = true;
+                document.getElementById('status-indicator').classList.remove('status-active');
+                document.getElementById('status-indicator').classList.add('status-inactive');
+                document.getElementById('status-text').textContent = 'Ready to send logs';
+            }
+        }
+
+        async function loadTemplates() {
+            const response = await fetch('/api/templates');
+            const data = await response.json();
+            const list = document.getElementById('templates-list');
+            
+            list.innerHTML = '';
+            data.templates.forEach(template => {
+                const div = document.createElement('div');
+                div.className = 'template-item';
+                div.textContent = template;
+                div.onclick = async () => {
+                    const resp = await fetch('/api/template/' + template);
+                    const content = await resp.json();
+                    selectedTemplate = content.content;
+                    alert('Template loaded: ' + template);
+                };
+                list.appendChild(div);
+            });
+        }
+
+        async function uploadTemplate() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/upload_template', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert('Template uploaded successfully!');
+                await loadTemplates();
+            } else {
+                alert('Error: ' + result.message);
+            }
+            
+            fileInput.value = '';
+        }
+
+        // Load configuration on page load
+        loadConfig();
+        
+        // Update status every 2 seconds
+        setInterval(updateStatus, 2000);
+        
+        // Load recent logs on usage tab
+        async function loadRecentLogs() {
+            const response = await fetch('/api/logs/recent');
+            const data = await response.json();
+            const logsContainer = document.getElementById('logs-container');
+            
+            logsContainer.innerHTML = '';
+            if (data.logs.length === 0) {
+                logsContainer.innerHTML = '<div style="color: #999; text-align: center;">No logs yet...</div>';
+            } else {
+                data.logs.forEach(log => {
+                    const logDiv = document.createElement('div');
+                    logDiv.className = 'log-entry' + (log.error ? ' error' : '');
+                    const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                    logDiv.innerHTML = `<span class="log-timestamp">[${timestamp}] #${log.count}</span> ${log.message}`;
+                    logsContainer.appendChild(logDiv);
+                });
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>

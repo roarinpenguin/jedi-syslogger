@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  jedi-syslogger:
+    build: .
+    container_name: jedi-syslogger
+    ports:
+      - "8042:8042"
+    volumes:
+      - ./config.json:/app/config.json
+      - ./configs.json:/app/configs.json
+      - ./custom_templates:/app/custom_templates
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
