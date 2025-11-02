@@ -190,6 +190,15 @@ class LogGenerator:
         # Replace IPs with random IPs
         result = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', lambda m: random_ip(), result)
         
+        # Replace usernames with Star Wars characters
+        result = re.sub(r'\buser="?([^"\s]+)"?', lambda m: f'user="{random_user()}"', result)
+        result = re.sub(r'\bUserId="?([^"\s@]+)@', lambda m: f'UserId="{random_user()}@', result)
+        
+        # Replace hostnames with Star Wars themed hosts
+        result = re.sub(r'\bname="?([A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)"?', lambda m: f'name="{random_host()}"', result)
+        result = re.sub(r'\bhostname="?([^"\s]+)"?', lambda m: f'hostname="{random_host()}"', result)
+        result = re.sub(r'\bhost="?([^"\s]+)"?', lambda m: f'host="{random_host()}"', result)
+        
         # Update timestamps to current time
         result = re.sub(r'\bdate=\d{4}-\d{2}-\d{2}\b', f'date={datetime.now().strftime("%Y-%m-%d")}', result)
         result = re.sub(r'\btime=\d{2}:\d{2}:\d{2}\b', f'time={datetime.now().strftime("%H:%M:%S")}', result)
