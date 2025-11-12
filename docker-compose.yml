@@ -7,9 +7,11 @@ services:
     ports:
       - "8042:8042"
     volumes:
-      - ./config.json:/app/config.json
-      - ./configs.json:/app/configs.json
+      - jedi-data:/app/data
       - ./custom_templates:/app/custom_templates
     restart: unless-stopped
     environment:
       - FLASK_ENV=production
+
+volumes:
+  jedi-data:

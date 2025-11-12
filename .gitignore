@@ -12,9 +12,8 @@ instance/
 env/
 venv/
 
-# Config files with sensitive data (optional - rimuovi se vuoi versionare)
-config.json
-configs.json
+# Data directory with config files
+data/
 
 # IDE
 .vscode/

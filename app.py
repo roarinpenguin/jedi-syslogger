@@ -10,8 +10,12 @@ from queue import Queue
 
 app = Flask(__name__, template_folder='template')
 
-CONFIG_FILE = 'config.json'
-CONFIGS_FILE = 'configs.json'
+# Use data directory for persistent storage
+DATA_DIR = os.environ.get('DATA_DIR', 'data')
+os.makedirs(DATA_DIR, exist_ok=True)
+
+CONFIG_FILE = os.path.join(DATA_DIR, 'config.json')
+CONFIGS_FILE = os.path.join(DATA_DIR, 'configs.json')
 TEMPLATES_DIR = 'custom_templates'
 
 syslog_thread = None
