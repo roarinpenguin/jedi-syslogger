@@ -21,6 +21,16 @@ docker-compose up -d
 
 Access the UI at http://localhost:8042
 
+### Deploying on Remote Machine
+
+When deploying on a remote machine, the application automatically handles Docker volume initialization. Simply:
+
+```bash
+docker-compose up --build -d
+```
+
+The entrypoint script will automatically fix any configuration file issues caused by Docker volume mounting.
+
 ### Manual Installation
 
 ```bash

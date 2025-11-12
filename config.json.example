@@ -1,0 +1,9 @@
+{
+  "syslog_server": "",
+  "syslog_port": 514,
+  "protocol": "udp",
+  "log_type": "fortigate",
+  "log_count": 10,
+  "delay_ms": 1000,
+  "continuous": false
+}
