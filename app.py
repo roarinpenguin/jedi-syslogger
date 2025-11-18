@@ -83,7 +83,7 @@ class LogGenerator:
         src_ip = random_ip()
         dst_ip = random_ip()
         user = random_user()
-        action = random.choice(['accept', 'deny', 'close'])
+        action = random.choice(['accepted', 'denied', 'closed'])
         proto = random.choice(['tcp', 'udp', 'icmp'])
         sport = random.randint(1024, 65535)
         dport = random.choice([80, 443, 22, 3389, 8080])
@@ -91,7 +91,7 @@ class LogGenerator:
         return f'date={timestamp} time={datetime.now().strftime("%H:%M:%S")} devname="{random_host()}" ' \
                f'logid="0000000013" type="traffic" subtype="forward" level="notice" ' \
                f'srcip={src_ip} srcport={sport} dstip={dst_ip} dstport={dport} ' \
-               f'proto={proto} action={action} user="{user}" msg="Traffic {action}ed"'
+               f'proto={proto} action={action} user="{user}" msg="Traffic {action}"'
     
     @staticmethod
     def paloalto():

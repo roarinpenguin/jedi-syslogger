@@ -27,3 +27,8 @@ Thumbs.db
 
 # Docker
 *.log
+
+# Custom Files and Folders
+config.json
+configs.json
+Sample Logs
